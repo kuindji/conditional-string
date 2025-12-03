@@ -2,7 +2,7 @@ import { describe, expect, test } from "bun:test";
 import {
     conditionalString,
     type ConditionalStringResult,
-} from "../src/conditionalString";
+} from "../src/conditionalString.js";
 
 // ============================================================================
 // Type-level tests (compile-time verification)
@@ -190,14 +190,20 @@ describe("conditionalString", () => {
         test("should include content when negated condition is falsy", () => {
             const template =
                 "SELECT * FROM users /*if:!skipDeleted*/WHERE deleted = false/*endif*/";
-            const result = conditionalString(template, { skipDeleted: false } as const);
+            const result = conditionalString(
+                template,
+                { skipDeleted: false } as const,
+            );
             expect(result).toBe("SELECT * FROM users WHERE deleted = false");
         });
 
         test("should exclude content when negated condition is truthy", () => {
             const template =
                 "SELECT * FROM users /*if:!skipDeleted*/WHERE deleted = false/*endif*/";
-            const result = conditionalString(template, { skipDeleted: true } as const);
+            const result = conditionalString(
+                template,
+                { skipDeleted: true } as const,
+            );
             expect(result).toBe("SELECT * FROM users ");
         });
 
@@ -267,21 +273,30 @@ describe("conditionalString", () => {
         test("should handle nested conditions (both truthy)", () => {
             const template =
                 "SELECT * /*if:a*/FROM users /*if:b*/WHERE active = true/*endif*//*endif*/";
-            const result = conditionalString(template, { a: true, b: true } as const);
+            const result = conditionalString(
+                template,
+                { a: true, b: true } as const,
+            );
             expect(result).toBe("SELECT * FROM users WHERE active = true");
         });
 
         test("should handle nested conditions (outer truthy, inner falsy)", () => {
             const template =
                 "SELECT * /*if:a*/FROM users /*if:b*/WHERE active = true/*endif*//*endif*/";
-            const result = conditionalString(template, { a: true, b: false } as const);
+            const result = conditionalString(
+                template,
+                { a: true, b: false } as const,
+            );
             expect(result).toBe("SELECT * FROM users ");
         });
 
         test("should handle nested conditions (outer falsy)", () => {
             const template =
                 "SELECT * /*if:a*/FROM users /*if:b*/WHERE active = true/*endif*//*endif*/";
-            const result = conditionalString(template, { a: false, b: true } as const);
+            const result = conditionalString(
+                template,
+                { a: false, b: true } as const,
+            );
             expect(result).toBe("SELECT * ");
         });
     });
@@ -312,7 +327,10 @@ describe("conditionalString", () => {
         test("should handle adjacent conditions", () => {
             const template =
                 "SELECT a/*if:b*/, b/*endif*//*if:c*/, c/*endif*/ FROM t";
-            const result = conditionalString(template, { b: true, c: false } as const);
+            const result = conditionalString(
+                template,
+                { b: true, c: false } as const,
+            );
             expect(result).toBe("SELECT a, b FROM t");
         });
     });
@@ -320,7 +338,10 @@ describe("conditionalString", () => {
     describe("truthy/falsy values", () => {
         test("should treat non-empty string as truthy", () => {
             const template = "SELECT * /*if:name*/WHERE name = $1/*endif*/";
-            const result = conditionalString(template, { name: "John" } as const);
+            const result = conditionalString(
+                template,
+                { name: "John" } as const,
+            );
             expect(result).toBe("SELECT * WHERE name = $1");
         });
 
@@ -344,18 +365,25 @@ describe("conditionalString", () => {
 
         test("should treat null as falsy", () => {
             const template = "SELECT * /*if:value*/WHERE value = $1/*endif*/";
-            const result = conditionalString(template, { value: null } as const);
+            const result = conditionalString(
+                template,
+                { value: null } as const,
+            );
             expect(result).toBe("SELECT * ");
         });
 
         test("should treat undefined as falsy", () => {
             const template = "SELECT * /*if:value*/WHERE value = $1/*endif*/";
-            const result = conditionalString(template, { value: undefined } as const);
+            const result = conditionalString(
+                template,
+                { value: undefined } as const,
+            );
             expect(result).toBe("SELECT * ");
         });
 
         test("should treat empty array as truthy (standard JS behavior)", () => {
-            const template = "SELECT * /*if:items*/WHERE items IS NOT NULL/*endif*/";
+            const template =
+                "SELECT * /*if:items*/WHERE items IS NOT NULL/*endif*/";
             const result = conditionalString(template, { items: [] } as const);
             expect(result).toBe("SELECT * WHERE items IS NOT NULL");
         });
@@ -402,20 +430,30 @@ WHERE 1=1`;
         test("should handle condition at start of template", () => {
             const template =
                 "/*if:withCTE*/WITH cte AS (SELECT 1) /*endif*/SELECT * FROM users";
-            const result = conditionalString(template, { withCTE: true } as const);
+            const result = conditionalString(
+                template,
+                { withCTE: true } as const,
+            );
             expect(result).toBe("WITH cte AS (SELECT 1) SELECT * FROM users");
         });
 
         test("should handle condition at end of template", () => {
-            const template = "SELECT * FROM users/*if:limit*/ LIMIT 10/*endif*/";
-            const result = conditionalString(template, { limit: true } as const);
+            const template =
+                "SELECT * FROM users/*if:limit*/ LIMIT 10/*endif*/";
+            const result = conditionalString(
+                template,
+                { limit: true } as const,
+            );
             expect(result).toBe("SELECT * FROM users LIMIT 10");
         });
 
         test("should handle special characters in content", () => {
             const template =
                 "SELECT * FROM users /*if:filter*/WHERE name LIKE '%test%'/*endif*/";
-            const result = conditionalString(template, { filter: true } as const);
+            const result = conditionalString(
+                template,
+                { filter: true } as const,
+            );
             expect(result).toBe("SELECT * FROM users WHERE name LIKE '%test%'");
         });
 
@@ -486,9 +524,11 @@ WHERE 1=1`;
                 /*if:minOrders*/HAVING COUNT(*) >= $1/*endif*/
                 ORDER BY order_count DESC
             `;
-            const result = conditionalString(template, { minOrders: 5 } as const);
+            const result = conditionalString(
+                template,
+                { minOrders: 5 } as const,
+            );
             expect(result).toContain("HAVING COUNT(*) >= $1");
         });
     });
 });
-

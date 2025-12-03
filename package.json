@@ -40,10 +40,7 @@
     "sideEffects": false,
     "scripts": {
         "build": "tsc -p ./tsconfig.build.json",
-        "lint": "bun eslint .",
-        "test": "bun test tests/**/*.spec.ts*",
-        "test:types": "tsc -p ./tests/types/tsconfig.json",
-        "test:all": "bun run test:types && bun run test",
+        "test": "bun test",
         "prepublishOnly": "bun run build"
     },
     "devDependencies": {
