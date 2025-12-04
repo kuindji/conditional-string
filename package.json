@@ -1,6 +1,6 @@
 {
     "name": "@kuindji/conditional-string",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "description": "Type-safe conditional string template parser with compile-time inference",
     "author": "Ivan Kuindzhi",
     "license": "MIT",
@@ -46,5 +46,8 @@
     "devDependencies": {
         "@types/bun": "^1.3.3",
         "typescript": "^5.9.3"
+    },
+    "publishConfig": {
+        "access": "public"
     }
 }

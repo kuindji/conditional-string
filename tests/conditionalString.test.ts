@@ -530,5 +530,24 @@ WHERE 1=1`;
             );
             expect(result).toContain("HAVING COUNT(*) >= $1");
         });
+
+        test("dynamic conditions with static condition type using .with()", () => {
+            const someVar = Math.random() > 0.5;
+
+            const template = `
+                SELECT user_id
+                FROM orders
+                WHERE status = 'completed'
+                /*if:flag*/AND user_id = 1/*endif*/
+            `;
+
+            // Using .with<Data>() to specify Data type explicitly
+            // while still inferring Template from the template string
+            const result = conditionalString.with<{ flag: true; }>()(
+                template,
+                { flag: !!someVar },
+            );
+            expect(result).toContain("status = 'completed'");
+        });
     });
 });

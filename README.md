@@ -5,6 +5,7 @@ Type-safe conditional string template parser with compile-time inference for Typ
 ## Features
 
 - **Compile-time type safety**: Results are inferred at the type level based on condition values
+- **Static type override**: Use `.with<Data>()` to specify static types for return type computation
 - **Simple syntax**: Uses comment syntax `/*if:condition*/.../*endif*/` that works with any string
 - **Negation support**: Use `!` prefix for negated conditions
 - **Dot notation**: Access nested properties with `user.isAdmin` syntax
@@ -165,6 +166,38 @@ type Result2 = ConditionalStringResult<
 
 If the condition values are not literal types (e.g., widened `boolean` instead of `true` or `false`), the result type falls back to `string`.
 
+### Static Type Override with `.with<Data>()`
+
+When you need to specify a static type for return type computation while allowing runtime values to vary, use the `.with<Data>()` method:
+
+```typescript
+import { conditionalString } from "@kuindji/conditional-string";
+
+// Runtime value determined dynamically
+const showAdmin = Math.random() > 0.5;
+
+const template = `User /*if:isAdmin*/[ADMIN]/*endif*/`;
+
+// Using .with<Data>() to specify static type for return type computation
+const result = conditionalString.with<{ isAdmin: true }>()(
+    template,
+    { isAdmin: showAdmin },  // Runtime value can be boolean
+);
+
+// Return type is computed as if isAdmin is always true: "User [ADMIN]"
+// But runtime result depends on actual showAdmin value
+```
+
+This is useful when:
+- You want predictable return types regardless of runtime values
+- You're building type-safe query builders where the schema is known at compile time
+- You need to decouple type computation from runtime data
+
+The `.with<Data>()` method:
+- Uses `Data` for **return type computation**
+- Accepts runtime data with matching keys but **unrestricted value types**
+- Template type is still **inferred automatically**
+
 ## Truthy/Falsy Values
 
 The library follows JavaScript truthy/falsy semantics:
@@ -183,16 +216,46 @@ The library follows JavaScript truthy/falsy semantics:
 
 ## API
 
-### `conditionalString<Template, Data>(template: Template, data: Data): ConditionalStringResult<Template, Data>`
+### `conditionalString<Template, Data>(template, data)`
 
-Processes a string template with conditional comments.
+Processes a string template with conditional comments. Both `Template` and `Data` types are inferred.
 
 **Parameters:**
 
 - `template`: The string with conditional comments
 - `data`: An object with condition values
 
-**Returns:** The processed string with conditionals resolved
+**Returns:** `ConditionalStringResult<Template, Data>` - The processed string with conditionals resolved
+
+---
+
+### `conditionalString.with<StaticData>()(template, data)`
+
+Creates a typed version where `StaticData` is used for return type computation, but runtime data values are unrestricted.
+
+**Type Parameters:**
+
+- `StaticData`: The type used for computing the return type
+
+**Parameters:**
+
+- `template`: The string with conditional comments (type is inferred)
+- `data`: An object with keys matching `StaticData`, but values can be any type
+
+**Returns:** `ConditionalStringResult<Template, StaticData>` - The processed string with type computed using `StaticData`
+
+**Example:**
+
+```typescript
+// Static type says isAdmin is true, so return type includes "[ADMIN]"
+// Runtime data can have isAdmin as any boolean
+const result = conditionalString.with<{ isAdmin: true }>()(
+    `User /*if:isAdmin*/[ADMIN]/*endif*/`,
+    { isAdmin: someRuntimeBoolean },
+);
+```
+
+---
 
 ### `ConditionalStringResult<Template, Data>`
 

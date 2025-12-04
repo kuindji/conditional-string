@@ -141,7 +141,51 @@ export type ConditionalStringResult<
 // Runtime implementation
 // ============================================================================
 
-export function conditionalString<
+/**
+ * A typed version of conditionalString where the Data type is pre-specified
+ * for return type computation, but runtime data values are not constrained.
+ *
+ * This allows specifying a "static" type like `{ flag: true }` for the return type,
+ * while accepting runtime data like `{ flag: boolean }`.
+ */
+type TypedConditionalString<StaticData extends Record<string, unknown>> = <
+    Template extends string,
+>(
+    template: Template,
+    data: { [K in keyof StaticData]: unknown; },
+) => ConditionalStringResult<Template, StaticData>;
+
+/**
+ * Interface for the conditionalString function with the .typed() method.
+ */
+interface ConditionalStringFn {
+    /**
+     * Process a template with inferred types for both Template and Data.
+     */
+    <Template extends string, Data extends Record<string, unknown>>(
+        template: Template,
+        data: Data,
+    ): ConditionalStringResult<Template, Data>;
+
+    /**
+     * Create a typed version of conditionalString with a pre-specified Data type.
+     * Use this when you want to explicitly type the data parameter while still
+     * inferring the Template type from the template string.
+     *
+     * @example
+     * ```ts
+     * type MyData = { showName: boolean; count: number };
+     * const result = conditionalString.with<MyData>()(template, data);
+     * // Data is typed as MyData, Template is inferred
+     * ```
+     */
+    with<Data extends Record<string, unknown>>(): TypedConditionalString<Data>;
+}
+
+/**
+ * Core implementation of the conditional string processing.
+ */
+function processConditionalString<
     Template extends string,
     Data extends Record<string, unknown>,
 >(template: Template, data: Data): ConditionalStringResult<Template, Data> {
@@ -178,6 +222,25 @@ export function conditionalString<
 }
 
 /**
+ * Creates a typed version of conditionalString with a pre-specified Data type.
+ */
+function createTypedConditionalString<
+    StaticData extends Record<string, unknown>,
+>(): TypedConditionalString<StaticData> {
+    return <Template extends string>(
+        template: Template,
+        data: { [K in keyof StaticData]: unknown; },
+    ): ConditionalStringResult<Template, StaticData> => {
+        return processConditionalString(template, data as StaticData);
+    };
+}
+
+export const conditionalString: ConditionalStringFn = Object.assign(
+    processConditionalString,
+    { with: createTypedConditionalString },
+);
+
+/**
  * Get a nested value from an object using dot notation.
  * @example getNestedValue({ user: { isAdmin: true } }, "user.isAdmin") // true
  */
@@ -199,4 +262,3 @@ function getNestedValue(obj: Record<string, unknown>, path: string): unknown {
 }
 
 export default conditionalString;
-
